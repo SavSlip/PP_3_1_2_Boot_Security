@@ -2,6 +2,7 @@ package ru.kata.spring.boot_security.demo.controller;
 
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -10,10 +11,18 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import ru.kata.spring.boot_security.demo.model.Role;
 import ru.kata.spring.boot_security.demo.model.User;
+import ru.kata.spring.boot_security.demo.repository.RoleRepository;
+import ru.kata.spring.boot_security.demo.repository.UserRepository;
 import ru.kata.spring.boot_security.demo.service.UserService;
 
 import javax.validation.Valid;
+import java.security.Principal;
+import java.util.Collections;
+import java.util.List;
+import java.util.stream.Collectors;
 
 
 @Controller
@@ -23,45 +32,61 @@ public class AdminController {
     @Autowired
     private UserService userService;
 
+    @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
+    private RoleRepository roleRepository;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
     @GetMapping("/users")
-    public String getAllUsers(Model model) {
+    public String getAllUsers(@ModelAttribute("user") User user, Model model, Principal principal) {
+        User currentUser = userRepository.findByName(principal.getName()).get();
         model.addAttribute("usersList", userService.getAllUsers());
-        return "allUsers";
-    }
+        model.addAttribute("currentUser", currentUser);
+        List<Role> roleList = roleRepository.findAll();
+        model.addAttribute("allRoles", roleList);
 
-
-    @GetMapping("/users/{id}")
-    public String getUserById(@PathVariable("id") long id, Model model) {
-        model.addAttribute("user", userService.findUserById(id));
-        return "userInfo";
-    }
-
-    @GetMapping("/users/{id}/edit")
-    public String editUser(@PathVariable("id") long id, Model model) {
-        model.addAttribute("user", userService.findUserById(id));
-        return "edit";
+        System.out.println();
+        return "showAllUsers";
     }
 
     @PostMapping("/users/{id}")
-    public String updateUser(@ModelAttribute("user") @Valid User user, BindingResult bindingResult,
+    public String updateUser(@RequestParam(value = "roles", required = false) List<String> stringRoles, @ModelAttribute("user") @Valid User user, BindingResult bindingResult,
                              @PathVariable("id") long id) {
-        if (bindingResult.hasErrors()) {
-            return "edit";
+        if (stringRoles == null) {
+            user.setRoles(userRepository.findById(user.getId()).get().getRoles());
+        } else {
+            List<Role> roles = stringRoles.stream().map(roleString -> roleRepository.findByName(roleString).get()).collect(Collectors.toList());
+            user.setRoles(roles);
         }
+        if (user.getPassword().isEmpty()) {
+            user.setPassword(userRepository.findById(user.getId()).get().getPassword());
+        } else {
+            user.setPassword(passwordEncoder.encode(user.getPassword()));
+        }
+
+
         userService.updateUser(id, user);
         return "redirect:/admin/users";
     }
 
-    @GetMapping("/users/new")
-    public String createUser(@ModelAttribute("user") User user) {
-        return "create";
-    }
 
     @PostMapping("/users")
-    public String addUser(@ModelAttribute("user") @Valid User user, BindingResult bindingResult) {
-        if (bindingResult.hasErrors()) {
-            return "create";
+    public String addUser(@ModelAttribute("user") @Valid User user, BindingResult bindingResult,
+                          @RequestParam(value = "roles", required = false) List<String> stringRoles) {
+        if (stringRoles == null) {
+            user.setRoles(Collections.singletonList(roleRepository.findById(1L).get()));
+        } else {
+            List<Role> roles = stringRoles.stream().map(roleString -> roleRepository.findByName(roleString).get()).collect(Collectors.toList());
+            user.setRoles(roles);
+        }
+        if (user.getPassword().isEmpty()) {
+            user.setPassword(passwordEncoder.encode("user"));
+        } else {
+            user.setPassword(passwordEncoder.encode(user.getPassword()));
         }
         userService.createUser(user);
         return "redirect:/admin/users";

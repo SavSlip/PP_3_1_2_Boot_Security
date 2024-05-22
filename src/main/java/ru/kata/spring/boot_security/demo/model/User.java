@@ -30,6 +30,19 @@ public class User {
     @Column(name = "name")
     private String name;
 
+    public String getLastName() {
+        return lastName;
+    }
+
+    public void setLastName(String lastName) {
+        this.lastName = lastName;
+    }
+
+    @NotEmpty(message = "Field is empty")
+    @Size(min = 2, max = 40, message = "Please enter correctly name - from 2 to 40 characters")
+    @Column(name = "last_name")
+    private String lastName;
+
     @PositiveOrZero
     @Column(name = "age")
     private int age;
@@ -111,9 +124,11 @@ public class User {
         return "User{" +
                 "id=" + id +
                 ", name='" + name + '\'' +
+                ", lastName='" + lastName + '\'' +
                 ", age=" + age +
                 ", email='" + email + '\'' +
                 ", password='" + password + '\'' +
+                ", roles=" + roles +
                 '}';
     }
 }
