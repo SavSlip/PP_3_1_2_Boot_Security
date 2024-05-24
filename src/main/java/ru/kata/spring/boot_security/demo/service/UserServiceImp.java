@@ -10,8 +10,11 @@ import java.util.List;
 @Service
 public class UserServiceImp implements UserService {
 
-    @Autowired
-    private UserRepository userRepository;
+    private final UserRepository userRepository;
+
+    public UserServiceImp(UserRepository userRepository) {
+        this.userRepository = userRepository;
+    }
 
     @Override
     public List<User> getAllUsers() {
@@ -21,6 +24,11 @@ public class UserServiceImp implements UserService {
     @Override
     public User findUserById(long id) {
         return userRepository.findById(id).orElse(null);
+    }
+
+    @Override
+    public User findUserByName(String name) {
+        return userRepository.findByName(name).get();
     }
 
     @Override
