@@ -4,15 +4,16 @@ package ru.kata.spring.boot_security.demo.controller;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import ru.kata.spring.boot_security.demo.model.Role;
 import ru.kata.spring.boot_security.demo.model.User;
+import ru.kata.spring.boot_security.demo.model.UserDTO;
 import ru.kata.spring.boot_security.demo.repository.RoleRepository;
 import ru.kata.spring.boot_security.demo.service.UserService;
 
@@ -46,32 +47,34 @@ public class AdminController {
         model.addAttribute("currentUser", currentUser);
         List<Role> roleList = roleRepository.findAll();
         model.addAttribute("allRoles", roleList);
-        return "showAllUsers";
+        return "showUser";
     }
 
-    @PostMapping("/users/{id}")
-    public String updateUser(@RequestParam(value = "roles", required = false) List<String> stringRoles,
-                             @ModelAttribute("user") @Valid User user,
-                             @PathVariable("id") long id) {
-        if (stringRoles == null) {
-            user.setRoles(userService.findUserById(user.getId()).getRoles());
-        } else {
-            List<Role> roles = stringRoles.stream().map(roleString -> roleRepository.findByName(roleString).get()).collect(Collectors.toList());
+    @PostMapping("/edit/{id}")
+    public String updateUser(@RequestBody UserDTO userDTO) {
+        User user = userService.findUserById(userDTO.getId());
+
+        user.setName(userDTO.getName());
+        user.setLastName(userDTO.getLastName());
+        user.setAge(userDTO.getAge());
+        user.setEmail(userDTO.getEmail());
+
+        if (!userDTO.getRoles().isEmpty()) {
+            List<Role> roles = userDTO.getRoles().stream().map(roleString -> roleRepository.findByName(roleString).get()).collect(Collectors.toList());
             user.setRoles(roles);
         }
-        if (user.getPassword().isEmpty()) {
-            user.setPassword(userService.findUserById(user.getId()).getPassword());
-        } else {
-            user.setPassword(passwordEncoder.encode(user.getPassword()));
+
+        if (userDTO.getPassword() != null) {
+            user.setPassword(passwordEncoder.encode(userDTO.getPassword()));
         }
-        userService.updateUser(id, user);
+        userService.updateUser(user.getId(), user);
         return "redirect:/admin/users";
     }
 
 
     @PostMapping("/users")
     public String addUser(@ModelAttribute("user") @Valid User user,
-                          @RequestParam(value = "roles", required = false) List<String> stringRoles) {
+                          @RequestParam(value = "userRoles", required = false) List<String> stringRoles) {
         if (stringRoles == null) {
             user.setRoles(Collections.singletonList(roleRepository.findById(1L).get()));
         } else {
@@ -87,8 +90,9 @@ public class AdminController {
         return "redirect:/admin/users";
     }
 
-    @PostMapping("/users/{id}/delete")
+    @PostMapping("/delete/{id}")
     public String deleteUser(@PathVariable("id") long id) {
+        System.err.println(id);
         userService.deleteUser(id);
         return "redirect:/admin/users";
     }

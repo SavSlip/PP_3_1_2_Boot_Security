@@ -33,6 +33,6 @@ public class UserController {
         model.addAttribute("currentUser", currentUser);
         List<Role> roleList = roleService.findAll();
         model.addAttribute("allRoles", roleList);
-        return "showAllUsers";
+        return "showUser";
     }
 }
