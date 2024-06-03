@@ -4,7 +4,6 @@ package ru.kata.spring.boot_security.demo.controller;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -13,7 +12,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import ru.kata.spring.boot_security.demo.model.Role;
 import ru.kata.spring.boot_security.demo.model.User;
-import ru.kata.spring.boot_security.demo.repository.RoleRepository;
+import ru.kata.spring.boot_security.demo.service.RoleService;
 import ru.kata.spring.boot_security.demo.service.UserService;
 
 import javax.validation.Valid;
@@ -29,13 +28,13 @@ public class AdminController {
 
     private final UserService userService;
 
-    private final RoleRepository roleRepository;
+    private final RoleService roleService;
 
     private final PasswordEncoder passwordEncoder;
 
-    public AdminController(UserService userService, RoleRepository roleRepository, PasswordEncoder passwordEncoder) {
+    public AdminController(UserService userService, RoleService roleService, PasswordEncoder passwordEncoder) {
         this.userService = userService;
-        this.roleRepository = roleRepository;
+        this.roleService = roleService;
         this.passwordEncoder = passwordEncoder;
     }
 
@@ -44,7 +43,7 @@ public class AdminController {
         User currentUser = userService.findUserByName(principal.getName());
         model.addAttribute("usersList", userService.getAllUsers());
         model.addAttribute("currentUser", currentUser);
-        List<Role> roleList = roleRepository.findAll();
+        List<Role> roleList = roleService.findAll();
         model.addAttribute("allRoles", roleList);
         return "showAllUsers";
     }
@@ -56,7 +55,7 @@ public class AdminController {
         if (stringRoles == null) {
             user.setRoles(userService.findUserById(user.getId()).getRoles());
         } else {
-            List<Role> roles = stringRoles.stream().map(roleString -> roleRepository.findByName(roleString).get()).collect(Collectors.toList());
+            List<Role> roles = stringRoles.stream().map(roleService::findByName).collect(Collectors.toList());
             user.setRoles(roles);
         }
         if (user.getPassword().isEmpty()) {
@@ -73,9 +72,9 @@ public class AdminController {
     public String addUser(@ModelAttribute("user") @Valid User user,
                           @RequestParam(value = "roles", required = false) List<String> stringRoles) {
         if (stringRoles == null) {
-            user.setRoles(Collections.singletonList(roleRepository.findById(1L).get()));
+            user.setRoles(Collections.singletonList(roleService.findById(1L)));
         } else {
-            List<Role> roles = stringRoles.stream().map(roleString -> roleRepository.findByName(roleString).get()).collect(Collectors.toList());
+            List<Role> roles = stringRoles.stream().map(roleService::findByName).collect(Collectors.toList());
             user.setRoles(roles);
         }
         if (user.getPassword().isEmpty()) {
