@@ -15,9 +15,47 @@ async function addNewUser(){
 
     allRoles.forEach(role => {
         const option = document.createElement('option');
-        // option.value = role.name;
         option.textContent = role.name;
         roleSelect.appendChild(option);
+    });
+
+    document.getElementById('addUserForm').addEventListener('submit', async function(event) {
+        event.preventDefault();
+
+        const form = event.target;
+        const formData = new FormData(form);
+        const data = Object.fromEntries(formData.entries());
+        data.roles = Array.from(formData.getAll('roles'));
+
+        try {
+            const response = await fetch('/admin/users', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            });
+
+            if (response.ok) {
+                console.log('Пользователь успешно добавлен');
+
+                const table = document.getElementById('usersTableBody');
+                table.innerHTML = '';
+
+                loadUsers();
+
+                let tab = new bootstrap.Tab(document.getElementById('home-tab'));
+                tab.show();
+
+                tab = new bootstrap.Tab(document.getElementById('profile-tab'));
+                tab.hide();
+                form.reset();
+            } else {
+                console.error('Ошибка добавления пользователя:', response.statusText);
+            }
+        } catch (error) {
+            console.error('Error adding user:', error);
+        }
     });
 }
 
@@ -235,3 +273,4 @@ async function sendDeleteRequest(userId) {
         console.error('Ошибка при выполнении запроса:', error);
     }
 }
+

@@ -32,6 +32,5 @@ public class UserRestController {
     @GetMapping("/user/current_user")
     public User getCurrentUser(Principal principal) {
         return userService.findUserByName(principal.getName());
-//        return userService.findUserById(2);
     }
 }

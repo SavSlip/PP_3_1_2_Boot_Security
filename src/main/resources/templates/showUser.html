@@ -287,7 +287,7 @@
 
                                     <div class="container-fluid md-4 p-2 border" style="background-color: white">
                                         <div class="container bg-white col-md-3">
-                                            <form method="POST" action="/admin/users">
+                                            <form id="addUserForm" method="POST" action="/admin/users">
                                                 <div class="form-group mt-1">
                                                     <label class="fw-bold text-center w-100" for="name">First
                                                         name:</label>
@@ -320,8 +320,8 @@
                                                 <div class="form-group mt-1">
                                                     <label class="form-label fw-bold text-center w-100"
                                                            for="new_user_roleSelect">Role</label>
-                                                    <select class="form-select form-control" id="new_user_roleSelect"
-                                                            name="userRoles" multiple>
+                                                    <select required class="form-select form-control" id="new_user_roleSelect"
+                                                            name="roles" multiple>
                                                     </select>
                                                 </div>
 
