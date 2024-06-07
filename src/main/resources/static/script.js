@@ -173,7 +173,7 @@ async function loadUserDataForEdit(userId) {
         });
 
         const editButton = document.getElementById('editButton');
-        // Удаляем события и создаем новое
+
         editButton.replaceWith(editButton.cloneNode(true));
         document.getElementById('editButton').addEventListener('click', () => sendEditRequest(userId));
     } catch (error) {

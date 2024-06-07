@@ -31,16 +31,13 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         this.userDetailsService = userDetailsService;
     }
 
-    // Настройка аутентификации
     @Override
     protected void configure(AuthenticationManagerBuilder authenticationManagerBuilder) throws Exception {
         authenticationManagerBuilder
                 .userDetailsService(userDetailsService)
                 .passwordEncoder(getPasswordEncoder());
-
     }
 
-    // Настройка доступа
     @Override
     protected void configure(HttpSecurity http) throws Exception {
         http
@@ -55,7 +52,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .and()
                 .formLogin()
                 .loginPage("/login")
-                .usernameParameter("email")  // указываем, что поле для имени пользователя называется "email"
+                .usernameParameter("email")
                 .permitAll()
                 .and()
                 .logout()
@@ -78,7 +75,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 return;
             }
             try {
-                response.sendRedirect(targetUrl); // перенаправление с помощью response.sendRedirect()
+                response.sendRedirect(targetUrl);
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
